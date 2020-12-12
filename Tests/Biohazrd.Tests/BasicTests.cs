@@ -7,6 +7,10 @@ namespace Biohazrd.Tests
 {
     public sealed class BasicTests
     {
+        [Fact]
+        public void Failure()
+            => Assert.True(false);
+        
         private void SmokeTestAssert(TranslatedLibrary library, string? fileName, string structName, string fieldName)
         {
             Assert.Empty(library.ParsingDiagnostics);
