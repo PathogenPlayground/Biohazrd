@@ -8,10 +8,43 @@
     <AnalysisLevel>5.0</AnalysisLevel>
 
     <RestoreSources>https://api.nuget.org/v3/index.json;https://nuget-ci.infectedlibraries.net/index.json</RestoreSources>
+    <!-- When building CI builds destined to be published on a public NuGet feed we only want to use it for restores -->
+    <RestoreSources Condition="'$(CiNuGetApiUrl)' != ''">$(CiNuGetApiUrl)</RestoreSources>
+    
+    <!-- Common NuGet Package Properties -->
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <PackageProjectUrl>https://github.com/InfectedLibraries</PackageProjectUrl>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Authors>David Maas and Contributors</Authors>
+    <Copyright>Copyright David Maas and Contributors</Copyright>
+    <Product>Biohazrd</Product>
+    
+    <!-- This dummy description is used to error when the description is missing -->
+    <PackageDescription>PACKAGE_DESCRIPTION_MISSING</PackageDescription>
+    <PackageDescription>A framework for automatically generating bindings for C/C++ libraries</PackageDescription>
+    <PackageDescriptionPrefix>A framework for automatically generating bindings for C/C++ libraries.&#10;&#10;</PackageDescriptionPrefix>
+
+    <!-- Ignore warnings about stable packages referencing pre-release ones. -->
+    <NoWarn>$(NoWarn);NU5104</NoWarn>
+
+    <!-- Emit modern symbol packages -->
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <IncludeSymbols>true</IncludeSymbols>
+
+    <!-- Embed untracked sources in the PDB -->
+    <EmbedUntrackedSources Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</EmbedUntrackedSources>
 
     <!--
       ClangSharp.Pathogen requires x64 right now
     -->
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Enable Source Link -->
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All"/>
+    
+    <!-- Package the license file -->
+    <None Include="$(MSBuildThisFileDirectory)../LICENSE.txt" Pack="true" PackagePath="" Visible="false" />
+  </ItemGroup>
 </Project>
