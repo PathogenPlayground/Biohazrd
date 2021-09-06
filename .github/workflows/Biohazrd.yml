@@ -19,6 +19,9 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: true
   DOTNET_GENERATE_ASPNET_CERTIFICATE: false
   ContinuousIntegrationBuild: true
+  # This URL will be added to the restore sources if it isn't the official NuGet.org
+  # (This is mainly intended to allow using the NuGet.org test servers to test CI in forks.)
+  CiNuGetApiUrl: ${{secrets.NUGET_API_URL}}
 jobs:
   build-and-test:
     strategy:
@@ -65,9 +68,11 @@ jobs:
         run: python .github/workflows/configure-build.py
         env:
           github_event_name: ${{github.event_name}}
+          github_ref: ${{github.ref}}
           github_run_number: ${{github.run_number}}
           release_version: ${{github.event.release.tag_name}}
           workflow_dispatch_version: ${{github.event.inputs.version}}
+          workflow_dispatch_will_publish_packages: ${{github.event.inputs.will_publish_packages}}
 
       # ----------------------------------------------------------------------- Build
       - name: Restore
@@ -165,6 +170,7 @@ jobs:
     environment: NuGet.org
     # Release builds always publish packages to NuGet.org
     # Workflow dispatch builds will only publish packages if enabled and an explicit version number is given
+    # Make sure this logic matches configure-build.py to ensure we don't accidentally depend on sibling CI pre-release packages
     if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.event.inputs.will_publish_packages == 'true' && github.event.inputs.version != '')
     steps:
       # ----------------------------------------------------------------------- Setup .NET

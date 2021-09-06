@@ -6,10 +6,6 @@
     <Features>strict</Features>
     <Nullable>enable</Nullable>
     <AnalysisLevel>5.0</AnalysisLevel>
-
-    <RestoreSources>https://api.nuget.org/v3/index.json;https://nuget-ci.infectedlibraries.net/index.json</RestoreSources>
-    <!-- When building CI builds destined to be published on a public NuGet feed we only want to use it for restores -->
-    <RestoreSources Condition="'$(CiNuGetApiUrl)' != ''">$(CiNuGetApiUrl)</RestoreSources>
     
     <!-- Common NuGet Package Properties -->
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
@@ -47,4 +43,17 @@
     <!-- Package the license file -->
     <None Include="$(MSBuildThisFileDirectory)../LICENSE.txt" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
+  <!-- ================================================================================================================
+  Configure NuGet package restore sources
+  ================================================================================================================= -->
+  <PropertyGroup>
+    <OfficialNuGetApiUrl>https://api.nuget.org/v3/index.json</OfficialNuGetApiUrl>
+    <RestoreSources>$(OfficialNuGetApiUrl)</RestoreSources>
+
+    <!-- Append CI-specific NuGet API if it's not the official NuGet API -->
+    <RestoreSources Condition="'$(CiNuGetApiUrl)' != '' and '$(CiNuGetApiUrl)' != '$(OfficialNuGetApiUrl)'">$(RestoreSources);$(CiNuGetApiUrl)</RestoreSources>
+
+    <!-- Allow consuming sibling CI packages if this build is not for packages which will be released publicly -->
+    <RestoreSources Condition="'$(CiIsForRelease)' != 'true'">$(RestoreSources);https://nuget-ci.infectedlibraries.net/index.json</RestoreSources>
+  </PropertyGroup>
 </Project>
