@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <PackageDescription>$(PackageDescription) — Language-agnostic functionality for writing out code and other files</PackageDescription>
+    <PackageDescription>This package provides language-agnostic functionality for writing out code and other files.</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

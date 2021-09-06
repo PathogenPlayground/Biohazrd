@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <PackageDescription>$(PackageDescription) — Language-agnostic functionality for manipulating declaration trees</PackageDescription>
+    <PackageDescription>This package provides language-agnostic functionality for manipulating declaration trees.</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <PackageDescription>$(PackageDescription) — Transformations and binding generation for C#</PackageDescription>
+    <PackageDescription>This package provides transformations and binding generation for C#.</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

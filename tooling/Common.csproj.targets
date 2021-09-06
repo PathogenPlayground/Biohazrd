@@ -16,14 +16,6 @@
   <Target Name="EnsureCiBuildsHaveVersion" BeforeTargets="Build;Pack" Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(CiBuildVersion)' == ''">
     <Error Text="ContinuousIntegrationBuild is enabled without specifying version number!" />
   </Target>
-
-  <!-- Ensure packages have descriptions -->
-  <Target Name="EnsurePackagesHaveDescriptions" BeforeTargets="GenerateNuspec" Condition="'$(IsPackable)' == 'true' and '$(PackageDescription)' == 'PACKAGE_DESCRIPTION_MISSING'">
-    <Error Text="$(AssemblyName) does not have a PackageDescription!" />
-  </Target>
-  <Target Name="EnsurePackagesHaveDescriptionsBeforeBuild" BeforeTargets="Build" Condition="'$(IsPackable)' == 'true' and '$(PackageDescription)' == 'PACKAGE_DESCRIPTION_MISSING'">
-    <Warning Text="$(AssemblyName) does not have a PackageDescription!" />
-  </Target>
   
   <!-- Use the informational version (which includes the Git revision) for the package version -->
   <Target Name="UseInformationalVersionForPackageVersion" BeforeTargets="GenerateNuspec;_GetOutputItemsFromPack" DependsOnTargets="AddSourceRevisionToInformationalVersion">
@@ -31,5 +23,21 @@
     <PropertyGroup>
       <PackageVersion>$(InformationalVersion)</PackageVersion>
     </PropertyGroup>
+  </Target>
+
+  <!-- Add common package description blurb to all packages -->
+  <PropertyGroup>
+    <CommonPackageDescription>A framework for automatically generating bindings for C/C++ libraries.</CommonPackageDescription>
+    <PackageDescription Condition="'$(PackageDescription)' != ''">$(CommonPackageDescription)&#10;&#10;$(PackageDescription)</PackageDescription>
+    <PackageDidNotSpecifyCustomDescription Condition="'$(PackageDescription)' == ''">true</PackageDidNotSpecifyCustomDescription>
+    <PackageDescription Condition="'$(PackageDescription)' == ''">$(CommonPackageDescription)</PackageDescription>
+  </PropertyGroup>
+
+  <!-- Ensure all specific packages have specific descriptions -->
+  <Target Name="EnsurePackageHasSpecificDescription" BeforeTargets="GenerateNuspec" Condition="'$(IsPackable)' == 'true' and '$(PackageDidNotSpecifyCustomDescription)' == 'true' and '$(AssemblyName)' != 'Biohazrd.AllInOne'">
+    <Error Text="$(AssemblyName) does not have a PackageDescription!" />
+  </Target>
+  <Target Name="EnsurePackageHasSpecificDescriptionBeforeBuild" BeforeTargets="Build" Condition="'$(IsPackable)' == 'true' and '$(PackageDidNotSpecifyCustomDescription)' == 'true'and '$(AssemblyName)' != 'Biohazrd.AllInOne'">
+    <Warning Text="$(AssemblyName) does not have a PackageDescription!" />
   </Target>
 </Project>

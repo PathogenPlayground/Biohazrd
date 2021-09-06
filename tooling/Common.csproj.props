@@ -15,11 +15,6 @@
     <Authors>David Maas and Contributors</Authors>
     <Copyright>Copyright David Maas and Contributors</Copyright>
     <Product>Biohazrd</Product>
-    
-    <!-- This dummy description is used to error when the description is missing -->
-    <PackageDescription>PACKAGE_DESCRIPTION_MISSING</PackageDescription>
-    <PackageDescription>A framework for automatically generating bindings for C/C++ libraries</PackageDescription>
-    <PackageDescriptionPrefix>A framework for automatically generating bindings for C/C++ libraries.&#10;&#10;</PackageDescriptionPrefix>
 
     <!-- Ignore warnings about stable packages referencing pre-release ones. -->
     <NoWarn>$(NoWarn);NU5104</NoWarn>

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
-    <PackageDescription>$(PackageDescription) — Language-agnostic helpers</PackageDescription>
+    <PackageDescription>This package provides various language-agnostic helpers for Biohazrd generators.</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

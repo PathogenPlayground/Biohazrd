@@ -4,7 +4,7 @@
     <TargetFramework>net5.0</TargetFramework>
     <!-- The Biohazrd package is an all-in-one package which brings in everything so we need to disambiguate this one. -->
     <PackageId>Biohazrd.Core</PackageId>
-    <PackageDescription>$(PackageDescriptionPrefix)This package provides core functionality for parsing and representing C/C++.</PackageDescription>
+    <PackageDescription>This package provides core functionality for parsing C/C++ libraries.</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
