@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="ClangSharp" Version="[12.0.0-beta2]" />
-    <PackageReference Include="ClangSharp.Pathogen" Version="[0.0.0-ci45]" />
+    <PackageReference Include="ClangSharp.Pathogen" Version="[0.0.0]" />
 
     <!-- Exclude ClangSharp's runtime packages (we provide libclang and libClangSharp via ClangSharp.Pathogen -->
     <PackageReference Include="libClang" Version="12.0.0" PrivateAssets="all" />
