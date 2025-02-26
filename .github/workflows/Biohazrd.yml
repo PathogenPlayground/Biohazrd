@@ -21,7 +21,7 @@ env:
   ContinuousIntegrationBuild: true
   # This URL will be added to the restore sources if it isn't the official NuGet.org
   # (This is mainly intended to allow using the NuGet.org test servers to test CI in forks.)
-  CiNuGetApiUrl: ${{secrets.NUGET_API_URL}}
+  CiNuGetApiUrl: ${{vars.NUGET_API_URL}}
 jobs:
   # =====================================================================================================================================================================
   # Build and Test Biohazrd
@@ -38,11 +38,10 @@ jobs:
             os: ubuntu-latest
             rid: linux-x64
           - name: Linux ARM64
-            os: ubuntu-arm64-latest
+            os: ubuntu-24.04-arm
             rid: linux-arm64
-            skip-tool-install: true
           - name: macOS x64
-            os: macos-10.15
+            os: macos-13
             rid: osx-x64
         configuration: ['Debug', 'Release']
         include:
@@ -58,32 +57,30 @@ jobs:
     steps:
       # ----------------------------------------------------------------------- Checkout
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
 
       # ----------------------------------------------------------------------- Setup Python
-      - name: Setup Python 3.8
-        if: matrix.platform.skip-tool-install != true
-        uses: actions/setup-python@v2
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.8'
+          python-version: '3.11'
 
       # ----------------------------------------------------------------------- Setup .NET
       - name: Setup .NET
-        if: matrix.platform.skip-tool-install != true
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8.x
 
       # ----------------------------------------------------------------------- Setup other dependencies
       - name: Setup other dependencies (Linux)
-        if: matrix.platform.skip-tool-install != true && runner.os == 'Linux'
+        if: runner.os == 'Linux'
         # This installs lld and llvm-ar, which are used by LinkImportsTransformationElfTests
         run: sudo apt-get install --yes lld llvm
 
       - name: Setup other dependencies (macOS)
-        if: matrix.platform.skip-tool-install != true && runner.os == 'macOS'
+        if: runner.os == 'macOS'
         # The LLVM toolchain provided by Xcode is stripped down and doesn't include things like lld or llvm-ar
         # However, the runners do have a full LLVM toolchian installed via brew, so we use that for tests which require these tools
         run: python .github/workflows/gha.py set_environment_variable BIOHAZRD_FULL_LLVM_TOOLCHAIN_PATH "$(brew --prefix llvm)"
@@ -117,7 +114,7 @@ jobs:
 
       # ----------------------------------------------------------------------- Collect Artifacts
       - name: Collect NuGet Packages
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         # We always want to collect packages when they were produced
         if: steps.pack.outcome == 'success' && always()
         with:
@@ -139,50 +136,20 @@ jobs:
     steps:
       # ----------------------------------------------------------------------- Setup .NET
       - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8.x
 
       # ----------------------------------------------------------------------- Download built packages
       - name: Download built packages
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: Packages
 
       # ----------------------------------------------------------------------- Upload release assets
       - name: Upload release assets
         if: github.event_name == 'release'
-        uses: actions/github-script@v4
-        with:
-          user-agent: actions/github-script for ${{github.repository}}
-          script: |
-            const fs = require('fs').promises;
-            const path = require('path');
-            const upload_url = context.payload.release.upload_url;
-
-            if (!upload_url) {
-                throw "Missing release asset upload URL!";
-            }
-
-            for (let filePath of await fs.readdir('.')) {
-                const fileExtension = path.extname(filePath);
-                if (fileExtension != '.nupkg' && fileExtension != '.snupkg') {
-                    continue;
-                }
-
-                console.log(`Uploading '${filePath}'`);
-                const contentLength = (await fs.stat(filePath)).size;
-                const fileContents = await fs.readFile(filePath);
-                await github.repos.uploadReleaseAsset({
-                    url: upload_url,
-                    headers: {
-                        'content-type': 'application/octet-stream',
-                        'content-length': contentLength
-                    },
-                    name: path.basename(filePath),
-                    data: fileContents
-                });
-            }
+        run: gh release upload ${{github.event.release.tag_name}} *.nupkg *.snupkg --clobber
 
       # ----------------------------------------------------------------------- Push to GitHub Packages
       - name: Push to GitHub Packages
@@ -206,49 +173,19 @@ jobs:
     steps:
       # ----------------------------------------------------------------------- Setup .NET
       - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8.x
 
       # ----------------------------------------------------------------------- Download built packages
       - name: Download built packages
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: Packages
 
       # ----------------------------------------------------------------------- Push to NuGet.org
       - name: Push to NuGet.org
-        run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source ${{secrets.NUGET_API_URL}}
+        run: dotnet nuget push "*.nupkg" --api-key ${{secrets.NUGET_API_KEY}} --source ${{vars.NUGET_API_URL}}
         env:
           # This is a workaround for https://github.com/NuGet/Home/issues/9775
           DOTNET_SYSTEM_NET_HTTP_USESOCKETSHTTPHANDLER: 0
-
-  # =====================================================================================================================================================================
-  # Send CI Failure Notification
-  # =====================================================================================================================================================================
-  send-ci-failure-notification:
-    name: Send CI Failure Notification
-    needs: [build-and-test, publish-packages-github, publish-packages-nuget-org]
-    if: failure() && github.event_name != 'pull_request'
-    continue-on-error: true
-    runs-on: ubuntu-latest
-    steps:
-      # ----------------------------------------------------------------------- Checkout
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      # ----------------------------------------------------------------------- Setup Python
-      - name: Setup Python 3.8
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-
-      # ----------------------------------------------------------------------- Send CI Failure Notification
-      - name: Send Notification
-        run: python .github/workflows/send-ci-failure-notification.py
-        env:
-          webhook_url: ${{secrets.TEAMS_WEBHOOK_URL}}
-          github_organization: ${{github.repository_owner}}
-          github_repo: ${{github.repository}}
-          github_workflow_name: ${{github.workflow}}
-          github_run_number: ${{github.run_id}}
